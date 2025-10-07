@@ -1,5 +1,5 @@
 name: bignumbers
-description: A starting point for Dart libraries or applications.
+description: Big numbers library for Dart, supporting arbitrary precision arithmetic.
 version: 0.0.1-beta
 # repository: https://github.com/my_org/my_repo
 
