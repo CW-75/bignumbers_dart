@@ -49,12 +49,22 @@ final class Bignumber<T> implements Comparable<Bignumber<T>> {
     }
   }
 
+  String _searchNegativeExponential(String value) {
+    if (value.contains('e-')) {
+      var parts = value.split('e-');
+      _d += int.parse(parts[1]);
+      return parts[0];
+    }
+    return value;
+  }
+
   void _getValue(T value) {
     if (value is String) {
       _getDecimalsOnString(value);
       _n = BigInt.parse(value.split('.').join());
     } else if (value is int || value is double) {
       var stringValue = value.toString();
+      stringValue = _searchNegativeExponential(stringValue);
       _getDecimalsOnString(stringValue);
       _n = BigInt.parse(stringValue.split('.').join());
     }
@@ -78,24 +88,32 @@ final class Bignumber<T> implements Comparable<Bignumber<T>> {
     var vala = _n;
     var valb = otherNum._n;
     String result;
+    int newDecimal;
     if (_d > otherNum._d) {
       valb *= BigInt.from(10).pow(_d - otherNum._d);
       result = (vala - valb).toString();
-      return Bignumber(result, _d);
+      newDecimal = _d;
     } else {
       vala *= BigInt.from(10).pow(otherNum._d - _d);
       result = (vala - valb).toString();
-      return Bignumber(result, otherNum._d);
+      newDecimal = otherNum._d;
     }
+    result = _trimRightZeros(
+      '${result.substring(0, result.length - newDecimal)}.${result.substring(result.length - newDecimal)}',
+    );
+    return Bignumber(result);
   }
 
   operator *(T other) {
     Bignumber otherNum = other is Bignumber ? other : Bignumber(other);
     var vala = _n;
     var multiplier = otherNum._n;
-    var result = vala * multiplier;
-    // var newDecimal = _d + otherNum._d;
-    return Bignumber(result.toString(), _d + otherNum._d);
+    var result = (vala * multiplier).toString();
+    var newDecimal = _d + otherNum._d;
+    result = _trimRightZeros(
+      '${result.substring(0, result.length - newDecimal)}.${result.substring(result.length - newDecimal)}',
+    );
+    return Bignumber(result);
   }
 
   operator /(T other) {
@@ -104,10 +122,8 @@ final class Bignumber<T> implements Comparable<Bignumber<T>> {
     var divisor = otherNum._n;
     if (otherNum._d > _d) {
       vala *= BigInt.from(10).pow(otherNum._d - _d);
-      print('Divisor: $divisor, Val: $vala');
     } else if (_d > otherNum._d) {
       divisor *= BigInt.from(10).pow(_d - otherNum._d);
-      print('Divisor: $divisor, Val: $vala');
     }
     print((vala / divisor).toString());
     // return Bignumber(BigInt.zero.toString(), 0);
@@ -131,9 +147,10 @@ final class Bignumber<T> implements Comparable<Bignumber<T>> {
   @override
   String toString() {
     _s = _n.isNegative;
-    var integerPart = _n ~/ BigInt.from(10).pow(_d);
+    var str = _n.toString().padRight(_d, '0');
+    var integerPart = str.substring(0, str.length - _d);
+    integerPart = integerPart.isEmpty ? '0' : integerPart;
     var decimalPart = _n.abs() % BigInt.from(10).pow(_d);
-    integerPart = integerPart < BigInt.zero ? -integerPart : integerPart;
     return decimalPart == BigInt.zero
         ? integerPart.toString()
         : '${_s ? '-' : ''}${_trimRightZeros('${integerPart.toString()}.${decimalPart.toString().padLeft(_d, '0')}')}';
