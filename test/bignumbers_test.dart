@@ -31,6 +31,11 @@ void main() {
       var num3 = Bignumber(150000025, 7);
       expect(num3.toString(), '15.0000025');
     });
+
+    test('Wrong definition', () {
+      expect(() => Bignumber('2a'), throwsA(isA<ArgumentError>()));
+      expect(() => Bignumber('2e'), throwsA(isA<ArgumentError>()));
+    });
   });
 
   group('Bignumber Arithmetic Tests', () {
@@ -61,6 +66,18 @@ void main() {
       var result = num1 / num2;
       expect(result, Bignumber('7.492507492507492'));
     });
+
+    test('Power a number', () {
+      Bignumber num1 = Bignumber('15.00000000000000025');
+      var result = num1.pow(2);
+      expect(result, Bignumber('225.0000000000000075000000000000000625'));
+    });
+
+    test('Power a number', () {
+      Bignumber num1 = Bignumber('15');
+      Bignumber result = num1 / Bignumber('10').pow(18);
+      expect(result, Bignumber('0.000000000000000015'));
+    });
     group('commutativity', () {
       test('Addition is commutative', () {
         Bignumber num1 = Bignumber('15.00000000000000025');
@@ -80,7 +97,7 @@ void main() {
         expect(num1 + 1, equals(Bignumber('16.00000000000000025')));
       });
 
-      test('Multiplication is commutative', () {
+      test('Substration between bignumber and double', () {
         Bignumber num1 = Bignumber('15.5');
         expect(num1 - 0.5, equals(Bignumber(15)));
       });

@@ -6,7 +6,7 @@ final class Bignumber<T> implements Comparable<Bignumber<T>> {
 
   /// Validates if the string is a valid number format
   void _validNumString(String value) {
-    RegExp regex = RegExp(r'^-?\d+(\.\d+)?$');
+    RegExp regex = RegExp(r'^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$');
     if (!regex.hasMatch(value)) {
       throw ArgumentError('Invalid number string: $value');
     }
@@ -42,10 +42,12 @@ final class Bignumber<T> implements Comparable<Bignumber<T>> {
         value is Bignumber<T>;
   }
 
+  /// Extracts the number of decimal places from the string representation
+  /// only when is constructed from a string or double
   void _getDecimalsOnString(String value) {
     if (value.contains('.')) {
       var decimals = value.split('.').last;
-      _d = decimals.length;
+      _d += decimals.length;
     }
   }
 
@@ -58,10 +60,12 @@ final class Bignumber<T> implements Comparable<Bignumber<T>> {
     return value;
   }
 
+  /// Extracts the value from the provided type and sets the internal state
   void _getValue(T value) {
     if (value is String) {
-      _getDecimalsOnString(value);
-      _n = BigInt.parse(value.split('.').join());
+      var newStr = _searchNegativeExponential(value);
+      _getDecimalsOnString(newStr);
+      _n = BigInt.parse(newStr.split('.').join());
     } else if (value is int || value is double) {
       var stringValue = value.toString();
       stringValue = _searchNegativeExponential(stringValue);
@@ -70,17 +74,29 @@ final class Bignumber<T> implements Comparable<Bignumber<T>> {
     }
   }
 
+  String _setFinalValue(String value, int decimal) {
+    var partInt = value.substring(0, value.length - decimal);
+    var partDec = value.substring(value.length - decimal);
+    return _trimRightZeros(
+      '${partInt.isEmpty ? '0' : partInt}.${partDec.padLeft(decimal, '0')}',
+    );
+  }
+
   operator +(T other) {
     Bignumber otherNum = other is Bignumber ? other : Bignumber(other);
     var vala = _n;
     var valb = otherNum._n;
+    int newDecimal;
     if (_d > otherNum._d) {
       valb *= BigInt.from(10).pow(_d - otherNum._d);
-      return Bignumber((vala + valb).toString(), _d);
+      newDecimal = _d;
     } else {
       vala *= BigInt.from(10).pow(otherNum._d - _d);
-      return Bignumber((vala + valb).toString(), otherNum._d);
+      newDecimal = otherNum._d;
     }
+    var result = (vala + valb).toString();
+    result = _setFinalValue(result, newDecimal);
+    return Bignumber(result);
   }
 
   operator -(T other) {
@@ -98,9 +114,7 @@ final class Bignumber<T> implements Comparable<Bignumber<T>> {
       result = (vala - valb).toString();
       newDecimal = otherNum._d;
     }
-    result = _trimRightZeros(
-      '${result.substring(0, result.length - newDecimal)}.${result.substring(result.length - newDecimal)}',
-    );
+    result = _setFinalValue(result, newDecimal);
     return Bignumber(result);
   }
 
@@ -110,9 +124,7 @@ final class Bignumber<T> implements Comparable<Bignumber<T>> {
     var multiplier = otherNum._n;
     var result = (vala * multiplier).toString();
     var newDecimal = _d + otherNum._d;
-    result = _trimRightZeros(
-      '${result.substring(0, result.length - newDecimal)}.${result.substring(result.length - newDecimal)}',
-    );
+    result = _setFinalValue(result, newDecimal);
     return Bignumber(result);
   }
 
@@ -120,14 +132,26 @@ final class Bignumber<T> implements Comparable<Bignumber<T>> {
     Bignumber otherNum = other is Bignumber ? other : Bignumber(other);
     var vala = _n;
     var divisor = otherNum._n;
-    if (otherNum._d > _d) {
-      vala *= BigInt.from(10).pow(otherNum._d - _d);
-    } else if (_d > otherNum._d) {
-      divisor *= BigInt.from(10).pow(_d - otherNum._d);
+    if (divisor == BigInt.zero) {
+      throw ArgumentError('Division by zero is not allowed');
     }
-    print((vala / divisor).toString());
-    // return Bignumber(BigInt.zero.toString(), 0);
-    return Bignumber((vala / divisor).toString());
+    if (vala == BigInt.zero) {
+      return Bignumber(0);
+    }
+    var result = (vala / divisor).toString();
+    var newDecLength = result.contains('.') ? result.split('.').last.length : 0;
+    int newDecimal = _d > otherNum._d ? _d - otherNum._d : otherNum._d - _d;
+    newDecimal += newDecLength;
+    result = result.replaceAll('.', '');
+    result = _setFinalValue(result, newDecimal);
+    return Bignumber(result);
+  }
+
+  Bignumber pow(int exponent) {
+    var result = _n.pow(exponent);
+    var newDecimal = _d * exponent;
+    var resultStr = _setFinalValue(result.toString(), newDecimal);
+    return Bignumber(resultStr);
   }
 
   @override
