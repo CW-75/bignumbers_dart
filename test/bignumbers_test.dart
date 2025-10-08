@@ -103,4 +103,34 @@ void main() {
       });
     });
   });
+  group('Comparation Tests', () {
+    test('Compare two bignumbers num1 is bigger than num2', () {
+      Bignumber num1 = Bignumber('15.00000000000000025');
+      Bignumber num2 = Bignumber('10.00000000000000075');
+      expect(num1 > num2, isTrue);
+      expect(num1 < num2, isFalse);
+      expect(num1 >= num2, isTrue);
+      expect(num1 <= num2, isFalse);
+      expect(num1 == num2, isFalse);
+    });
+    test('Compare two bignumbers num1 is lower than num2', () {
+      Bignumber num1 = Bignumber('1.00000000000000025');
+      Bignumber num2 = Bignumber('10.00000000000000075');
+      expect(num1 < num2, isTrue);
+      expect(num1 > num2, isFalse);
+      expect(num1 <= num2, isTrue);
+      expect(num1 >= num2, isFalse);
+      expect(num1 == num2, isFalse);
+    });
+
+    test('Compare two bignumbers num1 is equal than num2', () {
+      Bignumber num1 = Bignumber('2.00000000000000000025');
+      Bignumber num2 = Bignumber('2.00000000000000000025');
+      expect(num1 < num2, isFalse);
+      expect(num1 > num2, isFalse);
+      expect(num1 <= num2, isTrue);
+      expect(num1 >= num2, isTrue);
+      expect(num1 == num2, isTrue);
+    });
+  });
 }

@@ -13,7 +13,7 @@ final class Bignumber<T> implements Comparable<Bignumber<T>> {
   }
 
   @override
-  int compareTo(Bignumber<T> other) {
+  int compareTo(Bignumber other) {
     return _n == other._n && _d == other._d
         ? 0
         : _n / BigInt.from(10).pow(_d) >
@@ -158,6 +158,26 @@ final class Bignumber<T> implements Comparable<Bignumber<T>> {
   bool operator ==(Object other) {
     var otherValue = other is Bignumber ? other : Bignumber(other);
     return _n == otherValue._n && _d == otherValue._d && _s == otherValue._s;
+  }
+
+  bool operator <(T other) {
+    Bignumber otherNum = other is Bignumber ? other : Bignumber(other);
+    return compareTo(otherNum) < 0;
+  }
+
+  bool operator >(T other) {
+    Bignumber otherNum = other is Bignumber ? other : Bignumber(other);
+    return compareTo(otherNum) > 0;
+  }
+
+  bool operator >=(T other) {
+    Bignumber otherNum = other is Bignumber ? other : Bignumber(other);
+    return compareTo(otherNum) > 0 || compareTo(otherNum) == 0;
+  }
+
+  bool operator <=(T other) {
+    Bignumber otherNum = other is Bignumber ? other : Bignumber(other);
+    return compareTo(otherNum) < 0 || compareTo(otherNum) == 0;
   }
 
   Bignumber(T value, [int? decimal]) {
